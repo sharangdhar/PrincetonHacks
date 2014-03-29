@@ -28,7 +28,7 @@ uint32_t Head::brainData(uint32_t* wave, uint8_t atten, uint8_t med){
   result -= diff/min;
   
   //scale result based on how we're going to put together the binary string
-  return result;  //change scaling factor as needed
+  return result % 1000000;  //change scaling factor as needed
 }
 
 //gets the min in the array
