@@ -4,11 +4,10 @@ import random
 from random import choice
 import time
 import serial
-ser = serial.Serial()
-ser.port = "/dev/tty.HC-06-DevB"#"/dev/tty.usbmodem1411"# # may be called something different
-ser.baudrate = 9600 # may be different
+ser = serial.Serial()# these 4 lines taken from arduino forum
+ser.port = "/dev/tty.HC-06-DevB"
+ser.baudrate = 9600
 ser.open()
-
 
 
 class MGame(object):
@@ -18,11 +17,18 @@ class MGame(object):
         self.defineBoard()
         self.backColor = "black"
         self.gameOver = False
-        self.initGameOver = 0;
-        self.finGameOver = 0;
+        self.initGameOver = 0
+        self.finGameOver = 0
         self.startMove = time.time()
         self.userMovetimestart = time.time()
-        self.byte = 0;
+        self.byte = 0
+        self.timerStop=False
+        self.paused=False
+        self.count = 3
+        self.countDowntimer=True
+        self.gameOn=False
+        self.timei = time.time()
+        self.redrawAll()
 
     def initImages(self):
         self.block1 = PhotoImage(file="block1.gif")
@@ -49,31 +55,39 @@ class MGame(object):
         self.board[rows-1][cols-2]="block1"
         self.board[rows/2][cols/2]="userBot"
         self.ubotpos = (rows/2,cols/2)                            
-        
+
+
     def timerFired(self):
-        if(self.gameOver==True):
-            self.finGameOver = time.time()
-            if(self.finGameOver-self.initGameOver>1):
-                self.init()
-        else:
- #          self.finishMove = time.time()
- #           if(self.finishMove - self.startMove>2):
- #               self.moveBot(1,0)
-#                self.startMove = time.time()
-            self.userMovetimefin = time.time()
-            if(self.userMovetimefin-self.userMovetimestart>1):
-                (row,col)=self.runUserInput()
-                self.moveBot(row,col)
-                self.userMovetimestart = time.time()
-                
-        self.redrawAll()
+        if self.timerStop==False:
+            if self.gameOn==True:
+                if(self.gameOver==True):
+                    self.finGameOver = time.time()
+                    if(self.finGameOver-self.initGameOver>1):
+                        self.init()
+                else:            
+                    self.finishMove = time.time()
+                    #going down every 2 seconds
+                    if(self.finishMove - self.startMove>1.5):
+                        self.moveBot(1,0)
+                        self.startMove = time.time()
+                    self.userMovetimefin = time.time()
+                    if(self.userMovetimefin-self.userMovetimestart>1):
+                        (row,col)=self.runUserInput()
+                        self.moveBot(row,col)
+                        self.userMovetimestart = time.time()
+                self.redrawAll()
+            elif self.gameOn==False and self.countDowntimer==True:
+                self.timerCount()
+                self.redrawAll()
+        
         def f():
             self.timerFired()
         delay=250
         self.canvas.after(delay,f)
 
     def keyPressed(self,event):
-        if(self.gameOver==False):
+        if(self.gameOver==False and self.paused==False
+           and self.countDowntimer==False):
             if event.keysym=="Up":
                 self.moveBot(-1,0)
             if event.keysym=="Down":
@@ -82,6 +96,14 @@ class MGame(object):
                 self.moveBot(0,-1)
             if event.keysym=="Right":
                 self.moveBot(0,1)
+        if event.char=="p":
+            if self.timerStop==False:
+                self.paused =True
+                self.timerStop=True
+            else:
+                self.paused=False
+                self.timerStop=False
+        self.redrawAll()
         
     def moveBot(self,deltaVer,deltaHor):
         (row,col)=self.ubotpos
@@ -93,8 +115,8 @@ class MGame(object):
         if(not(self.gameOver==True and deltaVer==-1)):
             self.board[row][col]="userBot"
             self.ubotpos=(row,col)
-            
-            
+
+
     def drawBoard(self):
         margin = self.margin
         border = margin/10
@@ -132,17 +154,36 @@ class MGame(object):
             self.canvas.create_image(left,top,image=self.block4,anchor=NW)
         if(self.board[row][col]=="userBot"):
             self.canvas.create_image(left,top,image=self.userBot,anchor=NW)
-            
-    def redrawAll(self):
-        self.canvas.delete(ALL)
-        self.drawBoard()
 
-        
+
+    def timerCount(self):
+        self.timef = time.time()
+        if self.timef - self.timei>=1.000:
+            self.count-=1
+            self.timei=time.time()
+            if self.count==0:
+                self.gameOn=True
+                self.countDowntimer=False
+            
+    def drawTimer(self):
+        top = self.width/2 
+        left=self.width/2
+        msg=str(self.count)
+        self.canvas.create_text(top,left,text=msg,font="arial 42 bold",
+                                fill="white")
+
+    def drawPaused(self):
+        top = self.width/2
+        left=self.width/2
+        msg=str("Paused")
+        self.canvas.create_text(top,left,text=msg,font="arial 42 bold",
+                                fill="white")
     def runUserInput(self):
         index = 0;
         if ser.isOpen():
-            while index<1:
+            while index<2:
                 self.byte = int(ser.read())
+                #print self.byte
                 index+=1
         if self.byte==0:
             self.byte=1
@@ -150,6 +191,18 @@ class MGame(object):
             self.byte=-1
             #1 goes down opposite direction
         return (self.byte,0)
+
+    def redrawAll(self):
+        self.canvas.delete(ALL)
+        if self.timerStop==False and self.countDowntimer==True:
+            self.drawBoard()
+            self.drawTimer()
+        elif self.timerStop==True and self.paused==True:
+            self.drawBoard()
+            self.drawPaused()
+        else:
+            self.drawBoard()
+        
 
     def run(self):
         self.root=Tk()
@@ -171,3 +224,4 @@ class MGame(object):
 
 game = MGame()
 game.run()
+
