@@ -1,7 +1,9 @@
+#include "Headset.h"
+
 //returns an int to be made into a binary string for game
-uint32_t brainData(unint32_t* wave, uint32_t atten, uint32_t med){
+uint32_t Head::brainData(uint32_t* wave, uint8_t atten, uint8_t med){
   size_t len = 8;
-  size_t result = 0;
+  uint32_t result = 0;
   
   //sum for the 
   //low delta
@@ -19,9 +21,9 @@ uint32_t brainData(unint32_t* wave, uint32_t atten, uint32_t med){
   result -= med;
   
   //find how closely the waves are synchronized
-  uint32_t max = getMax(waves, len);
-  uint32_t min = getMin(waves, len);
-  uint32_t = max-min;
+  uint32_t max = getMax(wave, len);
+  uint32_t min = getMin(wave, len);
+  uint32_t diff = max-min;
   //synced waves increase focus
   result -= diff/min;
   
@@ -30,20 +32,20 @@ uint32_t brainData(unint32_t* wave, uint32_t atten, uint32_t med){
 }
 
 //gets the min in the array
-uint32_t getMin (uint32_t* array, size_t len){
+uint32_t Head::getMin (uint32_t* array, size_t len){
   uint32_t min = array[0];
   for (size_t i = 1; i < len; i++){
-    if (array[i] < min)
-	  min = wave[i];
+	if (array[i] < min)
+	  min = array[i];
   }
   return min;
 }
 
 //gets the max in the array
-uint32_t getMax (uinte32_t* array, size_t len){
-  uint32_t min = array[0];
+uint32_t Head::getMax (uint32_t* array, size_t len){
+  uint32_t max = array[0];
   for (size_t i = 1; i < len; i++){
-    if (array[i] > max)
+	if (array[i] > max)
 	  max = array[i];
   }
   return max;
