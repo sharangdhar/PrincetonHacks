@@ -1,0 +1,173 @@
+from Tkinter import *
+import copy
+import random
+from random import choice
+import time
+import serial
+ser = serial.Serial()
+ser.port = "/dev/tty.HC-06-DevB"#"/dev/tty.usbmodem1411"# # may be called something different
+ser.baudrate = 9600 # may be different
+ser.open()
+
+
+
+class MGame(object):
+        
+    def init(self):
+        self.initImages()
+        self.defineBoard()
+        self.backColor = "black"
+        self.gameOver = False
+        self.initGameOver = 0;
+        self.finGameOver = 0;
+        self.startMove = time.time()
+        self.userMovetimestart = time.time()
+        self.byte = 0;
+
+    def initImages(self):
+        self.block1 = PhotoImage(file="block1.gif")
+        self.block2 = PhotoImage(file="block2.gif")
+        self.block3 = PhotoImage(file="block3.gif")
+        self.block4 = PhotoImage(file="block4.gif")
+        self.userBot= PhotoImage(file="userBot.gif")
+     #if need to change the board, put it in the timer fired function
+    #try idea of mod for continuity
+
+    def defineBoard(self):
+        (rows,cols) = (self.rows,self.cols)
+        self.board = [[None]*cols for i in range(rows)]
+        #initing with basic board for now
+        for col in range(cols):
+            self.board[rows-1][col]="block4"
+        for row in range(rows):
+            self.board[row][0]="block1"
+            self.board[row][cols-1]="block1"
+        for row in range(rows):
+            self.board[row][1]="block2"
+            self.board[row][cols-2]="block3"
+        self.board[rows-1][1]="block1"
+        self.board[rows-1][cols-2]="block1"
+        self.board[rows/2][cols/2]="userBot"
+        self.ubotpos = (rows/2,cols/2)                            
+        
+    def timerFired(self):
+        if(self.gameOver==True):
+            self.finGameOver = time.time()
+            if(self.finGameOver-self.initGameOver>1):
+                self.init()
+        else:
+ #          self.finishMove = time.time()
+ #           if(self.finishMove - self.startMove>2):
+ #               self.moveBot(1,0)
+#                self.startMove = time.time()
+            self.userMovetimefin = time.time()
+            if(self.userMovetimefin-self.userMovetimestart>1):
+                (row,col)=self.runUserInput()
+                self.moveBot(row,col)
+                self.userMovetimestart = time.time()
+                
+        self.redrawAll()
+        def f():
+            self.timerFired()
+        delay=250
+        self.canvas.after(delay,f)
+
+    def keyPressed(self,event):
+        if(self.gameOver==False):
+            if event.keysym=="Up":
+                self.moveBot(-1,0)
+            if event.keysym=="Down":
+                self.moveBot(1,0)
+            if event.keysym=="Left":
+                self.moveBot(0,-1)
+            if event.keysym=="Right":
+                self.moveBot(0,1)
+        
+    def moveBot(self,deltaVer,deltaHor):
+        (row,col)=self.ubotpos
+        self.board[row][col]=None;
+        (row,col) = (row+deltaVer,col+deltaHor)
+        if(self.board[row][col]!=None or (row>=self.rows or col>=self.cols)):
+            self.gameOver =True
+            self.initGameOver = time.time()
+        if(not(self.gameOver==True and deltaVer==-1)):
+            self.board[row][col]="userBot"
+            self.ubotpos=(row,col)
+            
+            
+    def drawBoard(self):
+        margin = self.margin
+        border = margin/10
+        #makes border for game screen
+        self.canvas.create_rectangle(margin-margin/border,margin-margin/border,
+                                     self.width-margin+margin/border,
+                                     self.height-margin+margin/border,fill="white")
+        #colors the board we will play on
+        self.canvas.create_rectangle(margin,margin,self.width-margin,
+                                     self.height-margin,fill=self.backColor)
+        self.drawBoardHelper()
+
+
+    def drawBoardHelper(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                self.calculateBlock(row,col)
+                
+    #finds coordinates for the block 
+    def calculateBlock(self,row,col):
+        cellsize = self.cellsize
+        margin = self.margin
+        (left,top) = (cellsize*col+ margin, row*cellsize+margin)
+        (right, bottom) = (left+cellsize,top+cellsize)
+        self.drawBlock(left,top,row,col)
+
+    def drawBlock(self,left,top,row,col):
+        if(self.board[row][col]=="block1"):
+            self.canvas.create_image(left,top,image=self.block1,anchor=NW)
+        if(self.board[row][col]=="block2"):
+            self.canvas.create_image(left,top,image=self.block2,anchor=NW)
+        if(self.board[row][col]=="block3"):
+            self.canvas.create_image(left,top,image=self.block3,anchor=NW)
+        if(self.board[row][col]=="block4"):
+            self.canvas.create_image(left,top,image=self.block4,anchor=NW)
+        if(self.board[row][col]=="userBot"):
+            self.canvas.create_image(left,top,image=self.userBot,anchor=NW)
+            
+    def redrawAll(self):
+        self.canvas.delete(ALL)
+        self.drawBoard()
+
+        
+    def runUserInput(self):
+        index = 0;
+        if ser.isOpen():
+            while index<1:
+                self.byte = int(ser.read())
+                index+=1
+        if self.byte==0:
+            self.byte=1
+        else:
+            self.byte=-1
+            #1 goes down opposite direction
+        return (self.byte,0)
+
+    def run(self):
+        self.root=Tk()
+        self.cellsize = 50
+        self.rows = 10
+        self.cols = 15
+        self.margin = 40
+        self.width = self.cols*self.cellsize + 2*self.margin
+        self.height = self.rows*self.cellsize + 2*self.margin
+        self.canvas=Canvas(self.root,width=self.width, height=self.height,
+                           bg="black")
+        self.canvas.pack()
+        self.init()
+        self.root.bind("<Key>", lambda event: self.keyPressed(event))
+        self.timerFired()
+        self.root.mainloop()
+
+
+
+game = MGame()
+game.run()
