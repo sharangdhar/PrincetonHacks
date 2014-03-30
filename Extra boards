@@ -27,7 +27,7 @@ def defineBoard2(self):
 def defineBoard3(self):
 	(rows, cols) = (self.rows, self.cols)
 	self.board = [[None]*cols for i in range(rows)]
-	#3rd leves board
+	#3rd level board
 	for row in range(rows):
 		self.board[row][0] = "block1"
 		self.board[row][cols-1] = "block1"
@@ -39,4 +39,39 @@ def defineBoard3(self):
 	self.board[rows/2][cols/2-1] = "block1"
 	self.board[rows/2-1][cols/2] = "block1"
 	self.board[rows/2][cols/2] = "block1"
+	self.ubotpos = (rows-1, cols/2)
+
+
+def defineBoard4(self):
+	(rows, cols) = (self.rows, self.cols)
+	self.board = [[None]*cols for i in range(rows)]
+	#4th level board
+	for row in range(rows):
+		self.board[row][0] = "block1"
+		self.board[row][cols-1] = "block1"
+	for row in range(rows):
+		self.board[row][0] = "block1"
+		self.board[row][cols-1] = "block1"
+	for row in range(i = 3,8):
+		self.board[row][cols-2] = "block1"
+	for row in range(i = 5,7):
+		self.board[row][cols-3] = "block1"
+	for row in range(i = 0,3):
+		self.board[row][cols-2] = "block3"
+	for row in range(i = 3,5):
+		self.board[row][cols-3] = "block3"
+	for row in range(i = 5,7):
+		self.board[row][cols-4] = "block3"
+	for row in range(i = 7,8):
+		self.board[row][cols-3] = "block3"
+	for row in range(i = 8,10):
+		self.board[row][cols-2] = "block3"
+	self.board[rows/2-1][1] = "block1"
+	self.board[rows/2-1][2] = "block1"
+	self.board[rows/2][1] = "block1"
+	self.board[rows/2][2] = "block1"
+	for row in range(i = 0,rows/2):
+		self.board[row][1] = "block2"
+	for row in range(i = rows/2+2, rows):
+		self.board[row][1] = "block2"
 	self.ubotpos = (rows-1, cols/2)
