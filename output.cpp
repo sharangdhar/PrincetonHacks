@@ -1,11 +1,7 @@
-#include <time.h>
-#include <stdlib.h>
+#include "Arduino.h"
+#include "Output.h"
 
 uint8_t output (uint32_t range){
-  srand(time(NULL));
-  int r = rand() % range;
-  r -= 400000;
-  if (r < 0)
-    return 0;
-  return 1;
+  uint32_t r = random(1000000000) % range;
+  return r > 110000;
 }
