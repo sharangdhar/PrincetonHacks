@@ -8,6 +8,7 @@ import time
 import serial
 import Leap
 # serial port
+
 ser = serial.Serial()# these 4 lines taken from arduino forum
 ser.port = 'COM12'
 ser.baudrate = 9600
@@ -59,6 +60,7 @@ class MGame(object):
         self.block3 = PhotoImage(file="block3.gif")
         self.block4 = PhotoImage(file="block4.gif")
         self.userBot= PhotoImage(file="userBot.gif")
+        self.back = PhotoImage(file="galaxy1.gif");
      #if need to change the board, put it in the timer fired function
     #try idea of mod for continuity
 
@@ -157,14 +159,18 @@ class MGame(object):
                 self.botrotDir=(0,-1)
                         
     def moveBot(self,deltaVer,deltaHor):
-        if self.nextMove==True:
+        if self.gameOver == False and self.nextMove==True:
             (row,col)=self.ubotpos[0:2]
             self.board[row][col]=None;
             (row,col) = (row+deltaVer,col+deltaHor)
-            if(self.board[row][col]!=None or (row>=self.rows or col>=self.cols)):
+            if((row>self.rows or col>=self.cols
+                    or row<0 or col<=0) or (self.board[row][col] != None
+                                        and self.board[row][col][0:5]=="block")):
                 self.gameOver = True
                 self.initGameOver = time.time()
-            if(not(self.gameOver==True and deltaVer==-1)):
+                print self.gameOver
+            elif(not(self.gameOver==True and deltaVer==-1)):
+                print "G"
                 self.board[row][col]="Nuserbot"
                 self.nextMove = False
                 self.ubotpos=(row,col,deltaVer,deltaHor)
@@ -229,10 +235,10 @@ class MGame(object):
                                      self.width-margin+margin/border,
                                      self.height-margin+margin/border,fill="white")
         #colors the board we will play on
-        self.canvas.create_rectangle(margin,margin,self.width-margin,
-                                     self.height-margin,fill=self.backColor)
+     #   self.canvas.create_rectangle(margin,margin,self.width-margin,
+    #                                 self.height-margin,fill=self.backColor)
+        self.canvas.create_image(0,0,image = self.back, anchor = NW);
         self.drawBoardHelper()
-
     def drawBoardHelper(self):
         for row in range(self.rows):
             for col in range(self.cols):
@@ -319,7 +325,7 @@ class MGame(object):
         self.width = self.cols*self.cellsize + 2*self.margin
         self.height = self.rows*self.cellsize + 2*self.margin
         self.canvas=Canvas(self.root,width=self.width, height=self.height,
-                           bg="black")
+                          bg="black")
         self.canvas.pack()
         self.init()
         self.root.bind("<Key>", lambda event: self.keyPressed(event))
