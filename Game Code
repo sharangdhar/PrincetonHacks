@@ -60,7 +60,18 @@ class MGame(object):
         self.block3 = PhotoImage(file="block3.gif")
         self.block4 = PhotoImage(file="block4.gif")
         self.userBot= PhotoImage(file="userBot.gif")
-        self.back = PhotoImage(file="galaxy1.gif");
+        if(self.level == 0):
+            self.back = PhotoImage(file="galaxy1.gif");
+        if(self.level == 1):
+            self.back = PhotoImage(file="galaxy2.gif");
+        if(self.level == 2):
+            self.back = PhotoImage(file="galaxy3.gif");
+        if(self.level == 3):
+            self.back = PhotoImage(file="galaxy4.gif");
+        if(self.level == 4):
+            self.back = PhotoImage(file="galaxy5.gif");
+        print self.level
+            
      #if need to change the board, put it in the timer fired function
     #try idea of mod for continuity
 
@@ -89,6 +100,7 @@ class MGame(object):
                     self.finGameOver = time.time()
                 if(self.finGameOver-self.initGameOver>1):
                     self.controller.remove_listener(self.listener)
+                    self.level = (self.level+1)%5
                     self.init()
                 else:
  #                  self.finishMove = time.time()
@@ -239,6 +251,7 @@ class MGame(object):
     #                                 self.height-margin,fill=self.backColor)
         self.canvas.create_image(0,0,image = self.back, anchor = NW);
         self.drawBoardHelper()
+        
     def drawBoardHelper(self):
         for row in range(self.rows):
             for col in range(self.cols):
@@ -327,6 +340,7 @@ class MGame(object):
         self.canvas=Canvas(self.root,width=self.width, height=self.height,
                           bg="black")
         self.canvas.pack()
+        self.level=0
         self.init()
         self.root.bind("<Key>", lambda event: self.keyPressed(event))
         self.timerFired()
