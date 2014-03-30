@@ -5,14 +5,13 @@ sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib\\x86')
 import random
 from random import choice
 import time
-#import serial
+import serial
 import Leap
-#leap
 # serial port
-#ser = serial.Serial()# these 4 lines taken from arduino forum
-#ser.port = "/dev/tty.HC-06-DevB"
-#ser.baudrate = 9600
-#ser.open()
+ser = serial.Serial()# these 4 lines taken from arduino forum
+ser.port = 'COM12'
+ser.baudrate = 9600
+ser.open()
 
 a = 0
 
@@ -86,7 +85,8 @@ class MGame(object):
             if self.gameOn==True:
                 if(self.gameOver==True):
                     self.finGameOver = time.time()
-            #        if(self.finGameOver-self.initGameOver>1):
+                if(self.finGameOver-self.initGameOver>1):
+                    self.controller.remove_listener(self.listener)
                     self.init()
                 else:
  #                  self.finishMove = time.time()
@@ -94,12 +94,12 @@ class MGame(object):
  #                   if(self.finishMove - self.startMove>1.5):
 #                        self.moveBot(1,0)
 #                        self.startMove = time.time()
-   #                 self.userMovetimefin = time.time()
-    #                if(self.userMovetimefin-self.userMovetimestart>1):
-     #                   if self.nextMove == True:
-      #                      (row,col)=self.runUserInput()
-       #                     self.moveBot(row,col)
-        #               self.userMovetimestart = time.time()
+                    self.userMovetimefin = time.time()
+                    if(self.userMovetimefin-self.userMovetimestart>2):
+                        if self.nextMove == True:
+                            (row,col)=self.runUserInput()
+                            self.moveBot(row,col)
+                        self.userMovetimestart = time.time()
                     if self.nextMove == True:
                         global a
                         x = a
@@ -108,6 +108,7 @@ class MGame(object):
                             game.moveBot(0,-1)
                         elif x<(-0.1):
                             game.moveBot(0,1)
+                        a = 0
                 self.redrawAll()
             elif self.gameOn==False and self.countDowntimer==True:
                 self.timerCount()
@@ -295,16 +296,19 @@ class MGame(object):
         else:
             self.drawBoard()
 
- #   def runUserInput(self):
-  #      index = 0;
-   #     if ser.isOpen():
-    ##           self.byte = int(ser.read())
-      #          print self.byte
-       ##        index+=1
-        ##   self.byte=1
-        #else:
-         ##  #1 goes down opposite direction
-        #return (self.byte,0)
+    def runUserInput(self):
+        index = 0;
+        if ser.isOpen():
+            while index < 2:
+                self.byte = int(ser.read())
+                print self.byte
+                index+=1
+        if self.byte == 0:
+            self.byte=1
+        else:
+            self.byte = -1
+        #1 goes down opposite direction
+        return (self.byte,0)
 
     def run(self):
         self.root=Tk()
@@ -319,7 +323,7 @@ class MGame(object):
         self.canvas.pack()
         self.init()
         self.root.bind("<Key>", lambda event: self.keyPressed(event))
-        self.timerFired() //put the remove listner function at the place where we init again,before init() timer fired
+        self.timerFired()
         self.root.mainloop()
 
 
