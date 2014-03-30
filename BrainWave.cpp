@@ -1,29 +1,29 @@
 #include "BrainWave.h"
 
-BrainWave(Brain brain) {
-	b = brain;
+BrainWave::BrainWave(Brain *br) {
+	b = br;
 }
 
-boolean BrainWave:update() {
-	return b.update();
+boolean BrainWave::refresh() {
+	return b->update();
 }
 
-char* BrainWave:error() {
-	return b.readErrors();
+char* BrainWave::error() {
+	return b->readErrors();
 }
 
-boolean BrainWave:poorSignal() {
-	return b.readSignalQuality() < 100;
+boolean BrainWave::poorSignal() {
+	return b->readSignalQuality() < 100;
 }
 
-uint8_t attention() {
-	return b.readAttention();
+uint8_t BrainWave::attention() {
+	return b->readAttention();
 }
 
-uint8_t meditation() {
-	return b.readMeditation();
+uint8_t BrainWave::meditation() {
+	return b->readMeditation();
 }
 
-uint32_t* brainData() {
-	return b.readPowerArray();
+uint32_t* BrainWave::brainData() {
+	return b->readPowerArray();
 }
