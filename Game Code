@@ -1,13 +1,21 @@
 from Tkinter import *
-import copy
+import copy, sys
 import random
 from random import choice
 import time
 import serial
+import Leap
+#leap
+sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib')
+sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib\\x86')
+# serial port
 ser = serial.Serial()# these 4 lines taken from arduino forum
 ser.port = "/dev/tty.HC-06-DevB"
 ser.baudrate = 9600
 ser.open()
+
+
+
 
 
 class MGame(object):
@@ -26,7 +34,9 @@ class MGame(object):
         self.paused=False
         self.count = 3
         self.countDowntimer=True
+        self.nextMove = True
         self.gameOn=False
+        self.i = 1
         self.timei = time.time()
         self.redrawAll()
 
@@ -53,8 +63,8 @@ class MGame(object):
             self.board[row][cols-2]="block3"
         self.board[rows-1][1]="block1"
         self.board[rows-1][cols-2]="block1"
-        self.board[rows/2][cols/2]="userBot"
-        self.ubotpos = (rows/2,cols/2)                            
+        self.board[rows/2][cols/2]="userbot"
+        self.ubotpos = (rows/2,cols/2,0,0)                            
 
 
     def timerFired(self):
@@ -65,15 +75,16 @@ class MGame(object):
                     if(self.finGameOver-self.initGameOver>1):
                         self.init()
                 else:            
-                    self.finishMove = time.time()
+ #                  self.finishMove = time.time()
                     #going down every 2 seconds
-                    if(self.finishMove - self.startMove>1.5):
-                        self.moveBot(1,0)
-                        self.startMove = time.time()
+ #                   if(self.finishMove - self.startMove>1.5):
+#                        self.moveBot(1,0)
+#                        self.startMove = time.time()
                     self.userMovetimefin = time.time()
                     if(self.userMovetimefin-self.userMovetimestart>1):
-                        (row,col)=self.runUserInput()
-                        self.moveBot(row,col)
+                        if self.nextMove == True:
+                            (row,col)=self.runUserInput()
+                            self.moveBot(row,col)
                         self.userMovetimestart = time.time()
                 self.redrawAll()
             elif self.gameOn==False and self.countDowntimer==True:
@@ -82,20 +93,21 @@ class MGame(object):
         
         def f():
             self.timerFired()
-        delay=250
+        delay=30
         self.canvas.after(delay,f)
 
     def keyPressed(self,event):
         if(self.gameOver==False and self.paused==False
            and self.countDowntimer==False):
-            if event.keysym=="Up":
-                self.moveBot(-1,0)
-            if event.keysym=="Down":
-                self.moveBot(1,0)
-            if event.keysym=="Left":
-                self.moveBot(0,-1)
-            if event.keysym=="Right":
-                self.moveBot(0,1)
+            if (self.nextMove == True):
+                if event.keysym=="Up":
+                    self.moveBot(-1,0)
+                if event.keysym=="Down":
+                    self.moveBot(1,0)
+                if event.keysym=="Left":
+                    self.moveBot(0,-1)
+                if event.keysym=="Right":
+                    self.moveBot(0,1)
         if event.char=="p":
             if self.timerStop==False:
                 self.paused =True
@@ -104,19 +116,88 @@ class MGame(object):
                 self.paused=False
                 self.timerStop=False
         self.redrawAll()
-        
+
+    def defpressMove(self,event): #for moving defender in response to
+                                    #arrow keys
+        if  self.nextMove==True:
+            if event.keysym=="Up":
+                self.moveDefender(-1,0) #opposite movement
+                self.botrotDir=(-1,0)
+            elif event.keysym=="Down":
+                self.moveDefender(1,0)
+                self.botrotDir=(1,0)
+            elif event.keysym=="Right":
+                self.moveDefender(0,1)
+                self.botrotDir=(0,1)
+            elif event.keysym=="Left":
+                self.moveDefender(0,-1)
+                self.botrotDir=(0,-1)
+                        
     def moveBot(self,deltaVer,deltaHor):
-        (row,col)=self.ubotpos
-        self.board[row][col]=None;
-        (row,col) = (row+deltaVer,col+deltaHor)
-        if(self.board[row][col]!=None or (row>=self.rows or col>=self.cols)):
-            self.gameOver =True
-            self.initGameOver = time.time()
-        if(not(self.gameOver==True and deltaVer==-1)):
-            self.board[row][col]="userBot"
-            self.ubotpos=(row,col)
+        if self.nextMove==True:
+            (row,col)=self.ubotpos[0:2]
+            self.board[row][col]=None;
+            (row,col) = (row+deltaVer,col+deltaHor)
+            if(self.board[row][col]!=None or (row>=self.rows or col>=self.cols)):
+                self.gameOver =True
+                self.initGameOver = time.time()
+            if(not(self.gameOver==True and deltaVer==-1)):
+                self.board[row][col]="Nuserbot"
+                self.nextMove = False
+                self.ubotpos=(row,col,deltaVer,deltaHor)
+               
 
 
+                   
+    def userBotImageRot(self,left,top): #draws rotated Uenemy on screen
+        self.canvas.create_image(left,top, image = self.userBot,anchor=NW)
+
+    def drawDefender(self,row,col):#to animate the defender
+        if self.nextMove==False:
+            cellsize=self.cellsize
+            margin=self.margin
+            (drow,dcol)=self.ubotpos[2:4]
+            if (drow,dcol)==(-1,0) or (drow,dcol)==(1,0): #north
+                if (drow,dcol)==(-1,0):
+                    self.finalx=cellsize*col + margin
+                    self.finaly= row*cellsize + margin #final y or top
+                    self.presenty=self.finaly +cellsize-10*self.i 
+                    self.userBotImageRot(self.finalx,self.presenty)
+                elif(drow,dcol)==(1,0): #south
+                    self.finalx=cellsize*col + margin
+                    self.finaly= (row)*cellsize + margin #final y or top
+                    self.presenty=(row-1)*cellsize+margin + 10*self.i 
+                    self.userBotImageRot(self.finalx,self.presenty)
+                if self.presenty==self.finaly:
+                    self.board[row][col]="userbot"
+                    self.nextMove=True
+            self.drawAnimDefenderHelper(row,col,margin,cellsize)
+            if self.i==5:
+                self.i=1
+            else:
+                self.i +=1
+       
+    def drawAnimDefenderHelper(self,row,col,margin,cellsize):
+        #helper for smooth animation
+        (drow,dcol)=self.ubotpos[2:4]
+        if (drow,dcol)==(0,1) or (drow,dcol)==(0,-1): 
+                if (drow,dcol)==(0,1):#east
+                    self.finaly= row*cellsize + margin #final y or top
+                    self.finalx=cellsize*(col) + margin
+                    self.presentx=cellsize*(col-1) + margin + self.i*10 
+                    self.userBotImageRot(self.presentx,self.finaly)
+                elif (drow,dcol)==(0,-1): #west
+                    self.finaly= row*cellsize + margin #final y or top
+                    self.finalx=cellsize*(col) + margin
+                    self.presentx=cellsize*(col+1) + margin - self.i*10 
+                    self.userBotImageRot(self.presentx,self.finaly)
+                if self.presentx==self.finalx:
+                    self.board[row][col]="userbot"
+                    self.nextMove=True
+        
+
+     
+                           
     def drawBoard(self):
         margin = self.margin
         border = margin/10
@@ -152,7 +233,9 @@ class MGame(object):
             self.canvas.create_image(left,top,image=self.block3,anchor=NW)
         if(self.board[row][col]=="block4"):
             self.canvas.create_image(left,top,image=self.block4,anchor=NW)
-        if(self.board[row][col]=="userBot"):
+        if(self.board[row][col]=="Nuserbot"):
+            self.drawDefender(row,col)
+        if(self.board[row][col]=="userbot"):
             self.canvas.create_image(left,top,image=self.userBot,anchor=NW)
 
 
@@ -178,19 +261,7 @@ class MGame(object):
         msg=str("Paused")
         self.canvas.create_text(top,left,text=msg,font="arial 42 bold",
                                 fill="white")
-    def runUserInput(self):
-        index = 0;
-        if ser.isOpen():
-            while index<2:
-                self.byte = int(ser.read())
-                #print self.byte
-                index+=1
-        if self.byte==0:
-            self.byte=1
-        else:
-            self.byte=-1
-            #1 goes down opposite direction
-        return (self.byte,0)
+ 
 
     def redrawAll(self):
         self.canvas.delete(ALL)
@@ -202,7 +273,21 @@ class MGame(object):
             self.drawPaused()
         else:
             self.drawBoard()
-        
+
+    def runUserInput(self):
+        index = 0;
+        if ser.isOpen():
+            while index<2:
+                self.byte = int(ser.read())
+                print self.byte
+                #print self.byte
+                index+=1
+        if self.byte==0:
+            self.byte=1
+        else:
+            self.byte=-1
+            #1 goes down opposite direction
+        return (self.byte,0)
 
     def run(self):
         self.root=Tk()
@@ -220,8 +305,48 @@ class MGame(object):
         self.timerFired()
         self.root.mainloop()
 
+#game = MGame()
+#game.run()
 
 
-game = MGame()
+class LeapListener(Leap.Listener):
+    def on_frame(self, controller):
+        frame = controller.frame()
+        if not frame.hands.is_empty:
+            # Get the first hand
+            self.hand = frame.hands[0]
+            self.normal = self.hand.palm_normal
+            print self.normal.x
+    def get_x(self, controller):
+        return self.normal.x
+    
+class runFinal(object):
+    def init(self):
+        # Create a sample listener and controller
+        self.listener = LeapListener()
+        self.controller = Leap.Controller()
+
+        # Have the sample listener receive events from the controller
+        self.controller.add_listener(listener)
+        self.listener.hand = 2
+        
+    def run(self):
+        self.init()
+        game = MGame()
+        x = self.listner.get_x(self.controller)
+        while(True):
+            if(x>0.1):
+                game.moveBot(0,-1)
+            elif x<(-0.1):
+                game.moveBot(0,1)
+            
+
+        # Keep this process running until Enter is pressed
+        sys.stdin.readline()
+
+        # Remove the sample listener when done
+        controller.remove_listener(listener)
+        
+
+game  = runFinal()
 game.run()
-
