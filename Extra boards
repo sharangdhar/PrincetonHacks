@@ -5,21 +5,21 @@ def defineBoard2(self):
 	for row in range(rows):
 		self.board[row][0] = "block1"
 		self.board[row][cols-1] = "block1"
-	for row in range(i = 3,8):
+	for row in range(3,8):
 		self.board[row][1] = "block1"
-	for row in range(i = 5,7):
+	for row in range(5,7):
 		self.board[row][2] = "block1"
 	for row in range(rows):
 		self.board[row][cols-2] = "block3"
-	for row in range(i = 0,3):
+	for row in range(0,3):
 		self.board[row][1] = "block2"
-	for row in range(i = 3,5):
+	for row in range(3,5):
 		self.board[row][2] = "block2"
-	for row in range(i = 5,7):
+	for row in range(5,7):
 		self.board[row][3] = "block2"
-	for row in range(i = 7,8):
+	for row in range(7,8):
 		self.board[row][2] = "block2"
-	for row in range(i = 8,10):
+	for row in range(8,10):
 		self.board[row][1] = "block1"
 	self.ubotpos = (rows-1, cols/2)
 	
@@ -52,26 +52,26 @@ def defineBoard4(self):
 	for row in range(rows):
 		self.board[row][0] = "block1"
 		self.board[row][cols-1] = "block1"
-	for row in range(i = 3,8):
+	for row in range(3,8):
 		self.board[row][cols-2] = "block1"
-	for row in range(i = 5,7):
+	for row in range(5,7):
 		self.board[row][cols-3] = "block1"
-	for row in range(i = 0,3):
+	for row in range(0,3):
 		self.board[row][cols-2] = "block3"
-	for row in range(i = 3,5):
+	for row in range(3,5):
 		self.board[row][cols-3] = "block3"
-	for row in range(i = 5,7):
+	for row in range(5,7):
 		self.board[row][cols-4] = "block3"
-	for row in range(i = 7,8):
+	for row in range(7,8):
 		self.board[row][cols-3] = "block3"
-	for row in range(i = 8,10):
+	for row in range(8,10):
 		self.board[row][cols-2] = "block3"
 	self.board[rows/2-1][1] = "block1"
 	self.board[rows/2-1][2] = "block1"
 	self.board[rows/2][1] = "block1"
 	self.board[rows/2][2] = "block1"
-	for row in range(i = 0,rows/2):
+	for row in range(0,rows/2):
 		self.board[row][1] = "block2"
-	for row in range(i = rows/2+2, rows):
+	for row in range(rows/2+2, rows):
 		self.board[row][1] = "block2"
 	self.ubotpos = (rows-1, cols/2)
