@@ -319,7 +319,7 @@ class MGame(object):
         self.canvas.pack()
         self.init()
         self.root.bind("<Key>", lambda event: self.keyPressed(event))
-        self.timerFired()
+        self.timerFired() //put the remove listner function at the place where we init again,before init() timer fired
         self.root.mainloop()
 
 
