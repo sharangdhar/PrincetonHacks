@@ -1,26 +1,37 @@
 from Tkinter import *
 import copy, sys
+sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib')
+sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib\\x86')
 import random
 from random import choice
 import time
-import serial
+#import serial
 import Leap
 #leap
-sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib')
-sys.path.append('D:\\Documents\\LeapDeveloperKit\\LeapSDK\\lib\\x86')
 # serial port
-ser = serial.Serial()# these 4 lines taken from arduino forum
-ser.port = "/dev/tty.HC-06-DevB"
-ser.baudrate = 9600
-ser.open()
+#ser = serial.Serial()# these 4 lines taken from arduino forum
+#ser.port = "/dev/tty.HC-06-DevB"
+#ser.baudrate = 9600
+#ser.open()
 
+a = 0
 
-
-
+class LeapListener(Leap.Listener):
+    def on_frame(self, controller):
+        frame = controller.frame()
+        if not frame.hands.is_empty:
+            # Get the first hand
+            self.hand = frame.hands[0]
+            self.normal = self.hand.palm_normal
+            global a
+            a = self.normal.x
 
 class MGame(object):
         
     def init(self):
+        self.listener = LeapListener()
+        self.controller = Leap.Controller()
+        self.listener.on_frame(self.controller)
         self.initImages()
         self.defineBoard()
         self.backColor = "black"
@@ -38,6 +49,9 @@ class MGame(object):
         self.gameOn=False
         self.i = 1
         self.timei = time.time()
+
+        # Have the sample listener receive events from the controller
+        self.controller.add_listener(self.listener)
         self.redrawAll()
 
     def initImages(self):
@@ -72,20 +86,28 @@ class MGame(object):
             if self.gameOn==True:
                 if(self.gameOver==True):
                     self.finGameOver = time.time()
-                    if(self.finGameOver-self.initGameOver>1):
-                        self.init()
-                else:            
+            #        if(self.finGameOver-self.initGameOver>1):
+                    self.init()
+                else:
  #                  self.finishMove = time.time()
                     #going down every 2 seconds
  #                   if(self.finishMove - self.startMove>1.5):
 #                        self.moveBot(1,0)
 #                        self.startMove = time.time()
-                    self.userMovetimefin = time.time()
-                    if(self.userMovetimefin-self.userMovetimestart>1):
-                        if self.nextMove == True:
-                            (row,col)=self.runUserInput()
-                            self.moveBot(row,col)
-                        self.userMovetimestart = time.time()
+   #                 self.userMovetimefin = time.time()
+    #                if(self.userMovetimefin-self.userMovetimestart>1):
+     #                   if self.nextMove == True:
+      #                      (row,col)=self.runUserInput()
+       #                     self.moveBot(row,col)
+        #               self.userMovetimestart = time.time()
+                    if self.nextMove == True:
+                        global a
+                        x = a
+                        print a
+                        if(x>0.1):
+                            game.moveBot(0,-1)
+                        elif x<(-0.1):
+                            game.moveBot(0,1)
                 self.redrawAll()
             elif self.gameOn==False and self.countDowntimer==True:
                 self.timerCount()
@@ -139,7 +161,7 @@ class MGame(object):
             self.board[row][col]=None;
             (row,col) = (row+deltaVer,col+deltaHor)
             if(self.board[row][col]!=None or (row>=self.rows or col>=self.cols)):
-                self.gameOver =True
+                self.gameOver = True
                 self.initGameOver = time.time()
             if(not(self.gameOver==True and deltaVer==-1)):
                 self.board[row][col]="Nuserbot"
@@ -210,7 +232,6 @@ class MGame(object):
                                      self.height-margin,fill=self.backColor)
         self.drawBoardHelper()
 
-
     def drawBoardHelper(self):
         for row in range(self.rows):
             for col in range(self.cols):
@@ -274,20 +295,16 @@ class MGame(object):
         else:
             self.drawBoard()
 
-    def runUserInput(self):
-        index = 0;
-        if ser.isOpen():
-            while index<2:
-                self.byte = int(ser.read())
-                print self.byte
-                #print self.byte
-                index+=1
-        if self.byte==0:
-            self.byte=1
-        else:
-            self.byte=-1
-            #1 goes down opposite direction
-        return (self.byte,0)
+ #   def runUserInput(self):
+  #      index = 0;
+   #     if ser.isOpen():
+    ##           self.byte = int(ser.read())
+      #          print self.byte
+       ##        index+=1
+        ##   self.byte=1
+        #else:
+         ##  #1 goes down opposite direction
+        #return (self.byte,0)
 
     def run(self):
         self.root=Tk()
@@ -305,48 +322,6 @@ class MGame(object):
         self.timerFired()
         self.root.mainloop()
 
-#game = MGame()
-#game.run()
 
-
-class LeapListener(Leap.Listener):
-    def on_frame(self, controller):
-        frame = controller.frame()
-        if not frame.hands.is_empty:
-            # Get the first hand
-            self.hand = frame.hands[0]
-            self.normal = self.hand.palm_normal
-            print self.normal.x
-    def get_x(self, controller):
-        return self.normal.x
-    
-class runFinal(object):
-    def init(self):
-        # Create a sample listener and controller
-        self.listener = LeapListener()
-        self.controller = Leap.Controller()
-
-        # Have the sample listener receive events from the controller
-        self.controller.add_listener(listener)
-        self.listener.hand = 2
-        
-    def run(self):
-        self.init()
-        game = MGame()
-        x = self.listner.get_x(self.controller)
-        while(True):
-            if(x>0.1):
-                game.moveBot(0,-1)
-            elif x<(-0.1):
-                game.moveBot(0,1)
-            
-
-        # Keep this process running until Enter is pressed
-        sys.stdin.readline()
-
-        # Remove the sample listener when done
-        controller.remove_listener(listener)
-        
-
-game  = runFinal()
+game = MGame()
 game.run()
