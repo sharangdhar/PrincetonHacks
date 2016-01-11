@@ -1,4 +1,4 @@
-MindReader (Hack Princetion 2014)
+#MindReader (Hack Princeton 2014)
 
 ### About
 We wanted to provide a simple interface between an EEG headset and a computer, so we decided to build a wireless fully wearable system that provides very easy to use Bluetooth serial output through an Arduino to computer applications.
